@@ -22,7 +22,7 @@ void sUART::sendPackets(DataPackets packets) {
 
 void sUART::sendPacket(char16_t dataPacket) {
 
-    for(int i = 0; i < packet_size; i++){
+    for(int i = 0; i < getPacketSize(); i++){
         bool value = dataPacket & 1;
         dataPacket = dataPacket >> 1;
 
@@ -37,7 +37,7 @@ void sUART::sendPacket(char16_t dataPacket) {
 
 void sUART::begin(int baudrate) {
     baudrate = baudrate;
-    us_pause = (int)(packet_size / baudrate * 100000);
+    us_pause = (int)(getPacketSize() / baudrate * 100000);
 }
 
 DataPackets sUART::createDataPackets(hwlib::string<100> data) {
@@ -49,12 +49,23 @@ DataPackets sUART::createDataPackets(hwlib::string<100> data) {
         char16_t dataPacket = 0;
 
         dataPacket = dataPacket << 1; // Add start bit
-        dataPacket = dataPacket << 8; // Make room for data bits
-        dataPacket = dataPacket | current_character; // Add data
-        dataPacket = dataPacket << 1; // Make room for Parity bit
-        dataPacket = dataPacket | getParityBit(current_character);
-        dataPacket = dataPacket << 2; // Make room for end bits
-        dataPacket = dataPacket | 3; // End bits
+
+        // Add the data LSB->MSB so the RX gets it MSB->LSB
+        for(int i = 0; i < 8; i++){
+            dataPacket = dataPacket << 1; // Make room for data bit
+            dataPacket = dataPacket | (current_character & 1); // Add bit
+            current_character >> 1; // move bits so we can get the next bit
+        }
+
+        if(include_parity) {
+            dataPacket = dataPacket << 1; // Make room for Parity bit
+            dataPacket = dataPacket | getParityBit(current_character);
+        }
+
+        for(int i = 0; i < n_endbits; i++) {
+            dataPacket = dataPacket << 1; // Make room for end bits
+            dataPacket = dataPacket | 1; // End bits
+        }
 
         packets[i] = dataPacket;
     }
@@ -83,4 +94,8 @@ void sUART::test(){
         tx.set(true);
         hwlib::wait_ms(100);
     }
+}
+
+int sUART::getPacketSize() {
+    return 1 + data_size + (int)include_parity + n_endbits;
 }
