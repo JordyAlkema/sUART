@@ -22,9 +22,12 @@ void sUART::sendPackets(DataPackets packets) {
 
 void sUART::sendPacket(char16_t dataPacket) {
 
+    // remove unused bits to save time.
+    dataPacket = dataPacket << (16 - getPacketSize());
+
     for(int i = 0; i < getPacketSize(); i++){
-        bool value = dataPacket & 1;
-        dataPacket = dataPacket >> 1;
+        bool value = dataPacket & 0x2000;
+        dataPacket = dataPacket << 1;
 
         tx.set(value);
 
@@ -37,7 +40,7 @@ void sUART::sendPacket(char16_t dataPacket) {
 
 void sUART::begin(int baudrate) {
     baudrate = baudrate;
-    us_pause = (int)(getPacketSize() / baudrate * 100000);
+    us_pause = (int)(getPacketSize() / baudrate * 1000000);
 }
 
 DataPackets sUART::createDataPackets(hwlib::string<100> data) {
