@@ -4,6 +4,7 @@
 #include "Globals.cpp"
 #include "DataTypes.cpp"
 #include "libc-stub.cpp"
+#include "UART.cpp"
 
 class sUART {
     private:
