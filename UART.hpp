@@ -1,7 +1,7 @@
 #ifndef JA_UART_HPP
 #define JA_UART_HPP
 
-#include "DataTypes.cpp"
+#include "Globals.cpp"
 #include "libc-stub.cpp"
 
 class sUART {
@@ -21,25 +21,25 @@ class sUART {
 
     public:
 
-    sUART(hwlib::target::pin_out tx, hwlib::target::pin_in rx):
-            tx(tx), rx(rx){
-                // UART default(inactive) is HIGH
-                tx.set(true);
-    };
+        sUART(hwlib::target::pin_out tx, hwlib::target::pin_in rx):
+                tx(tx), rx(rx){
+                    // UART default(inactive) is HIGH
+                    tx.set(true);
+        };
 
         void begin(int baudrate);
-        DataPackets createDataPackets(hwlib::string<100> data);
-        void sendPackets(DataPackets packets);
         bool getParityBit(char Data);
+        int getPacketSize();
+        void baudPause();
+
+        // WRITE
         void outputChar(char data);
         void outputString(hwlib::string<100> data);
-        void sendPacket(char16_t dataPacket);
-        int getPacketSize();
-        bool getCurrentBit();
-        void test();
-        bool getBit();
-        bool print(hwlib::string<100> data);
+
+        // READ
         char read();
+        bool getCurrentBit();
         hwlib::string<100> readUntil(char untilChar);
+
 };
 #endif
