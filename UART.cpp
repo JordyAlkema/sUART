@@ -58,7 +58,7 @@ void sUART::outputChar(char data){
     // Paritybit
     if(include_parity){
         baudPause();
-        tx.set(getParityBit());
+        tx.set(getParityBit(data));
 
     }
 
@@ -68,14 +68,20 @@ void sUART::outputChar(char data){
         tx.set(true);
     }
 
+    baudPause();
+
     // Set to HIGH
     tx.set(true);
 }
 
-char sUART::read() {
+UART_READ sUART::read(int ms_limit) {
+    int endtime = hwlib::now_us() + (1000 * ms_limit);
+
     int bitsReceived = 0;
     int endBitsReceived = 0;
     char packet = 0;
+
+    UART_READ response = {};
 
     bool ledState = false;
 
@@ -83,7 +89,11 @@ char sUART::read() {
 
     // Wait for the start bit
     while(getCurrentBit()){
-        led.set(true);
+
+        // Check to make sure we stop within the set time
+        if(endtime < hwlib::now_us()){
+            return UART_READ{0, UART_ERROR_CODES::TIME_EXCEEDED};
+        }
     }
 
     while(bitsReceived < data_size){
@@ -109,6 +119,7 @@ char sUART::read() {
 
         if(bit != getParityBit(packet)){
             //TODO: Error handler maken
+            response.error = UART_ERROR_CODES::PARITY_ERROR;
         }
     }
 
@@ -123,8 +134,12 @@ char sUART::read() {
         endBitsReceived++;
     }
 
-    return packet;
+    response.data = packet;
+
+    return response;
 }
+
+
 
 bool sUART::getCurrentBit(){
     bool firstPoll = rx.get();
@@ -148,19 +163,41 @@ bool sUART::getCurrentBit(){
 }
 
 void sUART::baudPause(){
-    hwlib::wait_us_busy(us_pause);
+    hwlib::wait_us_busy(104);
+}
+
+hwlib::string<100> sUART::readString(int ms_wait) {
+    bool continueReading = true;
+    hwlib::string<100> data = "";
+
+    while(continueReading){
+        UART_READ response = read(ms_wait);
+
+        if(response.error == UART_ERROR_CODES::NONE){
+            data += response.data;
+        }else if(response.error == UART_ERROR_CODES::TIME_EXCEEDED){
+            continueReading = false;
+        }
+    }
+
+    return data;
 }
 
 hwlib::string<100> sUART::readUntil(char untilChar) {
     hwlib::string<100> data = "";
 
-    char lastChar = read();
-    data += lastChar;
+    UART_READ lastChar = read();
+    data += lastChar.data;
 
-    while(untilChar != lastChar){
+    while(untilChar != lastChar.data){
         lastChar = read();
-        data += lastChar;
+        data += lastChar.data;
     };
 
     return data;
+}
+
+hwlib::string<100> sUART::talk(hwlib::string<100> say) {
+    outputString(say);
+    return readString(1500);
 }

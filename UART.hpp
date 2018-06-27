@@ -2,6 +2,7 @@
 #define JA_UART_HPP
 
 #include "Globals.cpp"
+#include "DataTypes.cpp"
 #include "libc-stub.cpp"
 
 class sUART {
@@ -37,9 +38,13 @@ class sUART {
         void outputString(hwlib::string<100> data);
 
         // READ
-        char read();
+        UART_READ read(int ms_limit = 10000);
         bool getCurrentBit();
+        hwlib::string<100> readString(int ms_wait = 1000);
         hwlib::string<100> readUntil(char untilChar);
+
+        // COMBO
+        hwlib::string<100> talk(hwlib::string<100> say);
 
 };
 #endif
