@@ -69,9 +69,6 @@ void sUART::outputChar(char data){
     }
 
     baudPause();
-
-    // Set to HIGH
-    tx.set(true);
 }
 
 UART_READ sUART::read(int ms_limit) {

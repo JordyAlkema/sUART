@@ -4,7 +4,6 @@
 #include "Globals.cpp"
 #include "DataTypes.cpp"
 #include "libc-stub.cpp"
-#include "UART.cpp"
 
 class sUART {
     private:
@@ -48,4 +47,7 @@ class sUART {
         hwlib::string<100> talk(hwlib::string<100> say);
 
 };
+
+#include "UART.cpp"
+
 #endif
