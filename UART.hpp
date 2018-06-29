@@ -40,7 +40,7 @@ class sUART {
         // READ
         UART_READ read(int ms_limit = 10000);
         bool getCurrentBit();
-        hwlib::string<100> readString(int ms_wait = 1000);
+        hwlib::string<100> readString(int ms_wait = 1000, int max_ms_time = -1);
         hwlib::string<100> readUntil(char untilChar);
 
         // COMBO

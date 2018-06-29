@@ -29,6 +29,9 @@ void sUART::outputString(hwlib::string<100> string){
     for(uint8_t i = 0; i < string.length(); i++){
         outputChar(string[i]);
     }
+
+    // So the strings are seen as seperate strings
+    hwlib::wait_ms(10);
 }
 
 void sUART::outputChar(char data){
@@ -115,7 +118,6 @@ UART_READ sUART::read(int ms_limit) {
         bool bit = rx.get();
 
         if(bit != getParityBit(packet)){
-            //TODO: Error handler maken
             response.error = UART_ERROR_CODES::PARITY_ERROR;
         }
     }
@@ -163,11 +165,17 @@ void sUART::baudPause(){
     hwlib::wait_us_busy(104);
 }
 
-hwlib::string<100> sUART::readString(int ms_wait) {
+hwlib::string<100> sUART::readString(int ms_wait, int max_ms_time) {
+    int max_endtime = -1;
+
+    if(max_ms_time != -1){
+        max_endtime = hwlib::now_us() + (1000 * max_ms_time);
+    }
+
     bool continueReading = true;
     hwlib::string<100> data = "";
 
-    while(continueReading){
+    while(continueReading && (hwlib::now_us() > max_endtime || max_endtime == -1)){
         UART_READ response = read(ms_wait);
 
         if(response.error == UART_ERROR_CODES::NONE){
